@@ -48,10 +48,19 @@ var createShimmedElement = function(React, elementConstructor, name) {
     },
 
     setSelectionIfNeeded: function(node) {
+      var range;
+
       // if placeholder is visible, ensure cursor is at start of input
       if (this.needsPlaceholding && this.hasFocus && this.isPlaceholding &&
           (node.selectionStart !== 0 || node.selectionEnd !== 0)) {
-        node.setSelectionRange(0, 0);
+
+        if (node.setSelectionRange) {
+          node.setSelectionRange(0, 0);
+        } else if (node.createTextRange) {
+          range = node.createTextRange();
+          range.collapse(true);
+        }
+
         return true;
       }
       return false;
