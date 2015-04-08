@@ -121,11 +121,11 @@ var createShimmedElement = function(React, elementConstructor, name) {
       return element;
     }
   });
-}
+};
 
 module.exports = function(React) {
   return {
     Input: createShimmedElement(React, React.DOM.input, "Input"),
     Textarea: createShimmedElement(React, React.DOM.textarea, "Textarea")
-  }
+  };
 };
