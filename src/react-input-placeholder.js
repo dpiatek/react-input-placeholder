@@ -35,6 +35,9 @@ var createShimmedElement = function(React, elementConstructor, name) {
 
     // keep track of focus
     onFocus: function(e) {
+      if (this.isPlaceholding) {
+        this.clearPlaceholder(e);
+      }
       this.hasFocus = true;
       this.setSelectionIfNeeded(e.target);
       if (this.props.onFocus) { return this.props.onFocus(e); }
@@ -56,12 +59,7 @@ var createShimmedElement = function(React, elementConstructor, name) {
 
     onChange: function(e) {
       if (this.isPlaceholding) {
-        // remove placeholder when text is added
-        var value = e.target.value,
-            i = value.indexOf(this.props.placeholder);
-        if (i !== -1) {
-          e.target.value = value.slice(0, i);
-        }
+        this.clearPlaceholder(e);
       }
       var onChange = this.getOnChange();
       if (onChange) { return onChange(e); }
@@ -70,9 +68,19 @@ var createShimmedElement = function(React, elementConstructor, name) {
     onSelect: function(e) {
       if (this.isPlaceholding) {
         this.setSelectionIfNeeded(e.target);
+        this.clearPlaceholder(e);
         return false;
       } else if (this.props.onSelect) {
         return this.props.onSelect(e);
+      }
+    },
+
+    clearPlaceholder: function(e) {
+      // remove placeholder when text is added
+      var value = e.target.value,
+          i = value.indexOf(this.props.placeholder);
+      if (i !== -1) {
+        e.target.value = value.slice(0, i);
       }
     },
 
