@@ -1,4 +1,4 @@
-;(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var isPlaceholderSupported = 'placeholder' in document.createElement('input');
 
 /**
@@ -36,6 +36,9 @@ var createShimmedElement = function(React, elementConstructor, name) {
 
     // keep track of focus
     onFocus: function(e) {
+      if (this.isPlaceholding) {
+        this.clearPlaceholder(e);
+      }
       this.hasFocus = true;
       this.setSelectionIfNeeded(e.target);
       if (this.props.onFocus) { return this.props.onFocus(e); }
@@ -46,10 +49,19 @@ var createShimmedElement = function(React, elementConstructor, name) {
     },
 
     setSelectionIfNeeded: function(node) {
+      var range;
+
       // if placeholder is visible, ensure cursor is at start of input
       if (this.needsPlaceholding && this.hasFocus && this.isPlaceholding &&
           (node.selectionStart !== 0 || node.selectionEnd !== 0)) {
-        node.setSelectionRange(0, 0);
+
+        if (node.setSelectionRange) {
+          node.setSelectionRange(0, 0);
+        } else if (node.createTextRange) {
+          range = node.createTextRange();
+          range.collapse(true);
+        }
+
         return true;
       }
       return false;
@@ -57,12 +69,7 @@ var createShimmedElement = function(React, elementConstructor, name) {
 
     onChange: function(e) {
       if (this.isPlaceholding) {
-        // remove placeholder when text is added
-        var value = e.target.value,
-            i = value.indexOf(this.props.placeholder);
-        if (i !== -1) {
-          e.target.value = value.slice(0, i);
-        }
+        this.clearPlaceholder(e);
       }
       var onChange = this.getOnChange();
       if (onChange) { return onChange(e); }
@@ -71,9 +78,19 @@ var createShimmedElement = function(React, elementConstructor, name) {
     onSelect: function(e) {
       if (this.isPlaceholding) {
         this.setSelectionIfNeeded(e.target);
+        this.clearPlaceholder(e);
         return false;
       } else if (this.props.onSelect) {
         return this.props.onSelect(e);
+      }
+    },
+
+    clearPlaceholder: function(e) {
+      // remove placeholder when text is added
+      var value = e.target.value,
+          i = value.indexOf(this.props.placeholder);
+      if (i !== -1) {
+        e.target.value = value.slice(0, i);
       }
     },
 
@@ -82,7 +99,16 @@ var createShimmedElement = function(React, elementConstructor, name) {
     },
 
     render: function() {
-      var element = this.transferPropsTo(elementConstructor());
+      var elProps = {};
+       // Simulate shallow merge
+      for (var propKey in this.props) {
+        if (this.props.hasOwnProperty(propKey)) {
+          elProps[propKey] = this.props[propKey];
+        }
+      }
+
+      var element = elementConstructor(elProps);
+
       if (this.needsPlaceholding) {
         // override valueLink and event handlers
         element.props.onFocus = this.onFocus;
@@ -95,7 +121,6 @@ var createShimmedElement = function(React, elementConstructor, name) {
         if (!value) {
           this.isPlaceholding = true;
           value = this.props.placeholder;
-          element.props.type = 'text';
           element.props.className += ' placeholder';
         } else {
           this.isPlaceholding = false;
@@ -105,13 +130,13 @@ var createShimmedElement = function(React, elementConstructor, name) {
       return element;
     }
   });
-}
+};
 
 module.exports = function(React) {
   return {
-    Input: createShimmedElement(React, React.DOM.input, "Input"),
-    Textarea: createShimmedElement(React, React.DOM.textarea, "Textarea")
-  }
+    Input: createShimmedElement(React, React.DOM.input, 'Input'),
+    Textarea: createShimmedElement(React, React.DOM.textarea, 'Textarea')
+  };
 };
 
 },{}],2:[function(require,module,exports){
@@ -125,4 +150,3 @@ if (typeof define === 'function' && define.amd) {
   window.PlaceholderShim = reactInputPlaceholder(window.React);
 }
 },{"./react-input-placeholder":1}]},{},[2])
-;

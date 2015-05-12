@@ -98,7 +98,16 @@ var createShimmedElement = function(React, elementConstructor, name) {
     },
 
     render: function() {
-      var element = this.transferPropsTo(elementConstructor());
+      var elProps = {};
+       // Simulate shallow merge
+      for (var propKey in this.props) {
+        if (this.props.hasOwnProperty(propKey)) {
+          elProps[propKey] = this.props[propKey];
+        }
+      }
+
+      var element = elementConstructor(elProps);
+
       if (this.needsPlaceholding) {
         // override valueLink and event handlers
         element.props.onFocus = this.onFocus;
@@ -124,7 +133,7 @@ var createShimmedElement = function(React, elementConstructor, name) {
 
 module.exports = function(React) {
   return {
-    Input: createShimmedElement(React, React.DOM.input, "Input"),
-    Textarea: createShimmedElement(React, React.DOM.textarea, "Textarea")
+    Input: createShimmedElement(React, React.DOM.input, 'Input'),
+    Textarea: createShimmedElement(React, React.DOM.textarea, 'Textarea')
   };
 };
