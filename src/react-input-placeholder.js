@@ -106,34 +106,33 @@ var createShimmedElement = function(React, elementConstructor, name) {
         }
       }
 
-      var element = elementConstructor(elProps);
-
       if (this.needsPlaceholding) {
         // override valueLink and event handlers
-        element.props.onFocus = this.onFocus;
-        element.props.onBlur = this.onBlur;
-        element.props.onChange = this.onChange;
-        element.props.onSelect = this.onSelect;
-        element.props.valueLink = undefined;
+        elProps.onFocus = this.onFocus;
+        elProps.onBlur = this.onBlur;
+        elProps.onChange = this.onChange;
+        elProps.onSelect = this.onSelect;
+        elProps.valueLink = undefined;
 
         var value = this.getValue();
         if (!value) {
           this.isPlaceholding = true;
           value = this.props.placeholder;
-          element.props.className += ' placeholder';
+          elProps.className += ' placeholder';
         } else {
           this.isPlaceholding = false;
         }
-        element.props.value = value;
+        elProps.value = value;
       }
-      return element;
+
+      return React.createElement(elementConstructor, elProps);
     }
   });
 };
 
 module.exports = function(React) {
   return {
-    Input: createShimmedElement(React, React.DOM.input, 'Input'),
-    Textarea: createShimmedElement(React, React.DOM.textarea, 'Textarea')
+    Input: createShimmedElement(React, 'input', 'Input'),
+    Textarea: createShimmedElement(React, 'textarea', 'Textarea')
   };
 };
